@@ -9,14 +9,14 @@ v = open('variables.json')
 historic = json.load(v)
 print(historic)
 uris = [
-    "https://uk.pcpartpicker.com/product/vFhmP6/asus-rog-strix-b550-f-gaming-wi-fi-atx-am4-motherboard-rog-strix-b550-f-gaming-wi-fi",
     "https://uk.pcpartpicker.com/product/9nm323/amd-ryzen-53600-36-thz-6-core-processor-100-100000031box",
     "https://uk.pcpartpicker.com/product/29drxr/cooler-master-masterbox-nr200p-mini-itx-desktop-case-mcb-nr200p-kgnn-s00",
     "https://uk.pcpartpicker.com/product/BtsmP6/corsair-sf-600w-80-platinum-certified-fully-modular-sfx-power-supply-cp-9020182-na",
     "https://uk.pcpartpicker.com/product/p6RFf7/corsair-memory-cmk16gx4m2b3200c16",
     "https://uk.pcpartpicker.com/product/PVfFf7/nzxt-kraken-x53-7311-cfm-liquid-cpu-cooler-rl-krx53-01",
     "https://uk.pcpartpicker.com/product/Zxw7YJ/samsung-970-evo-plus-1-tb-m2-2280-nvme-solid-state-drive-mz-v7s1t0bam",
-    "https://uk.pcpartpicker.com/product/ThhmP6/zotac-geforce-rtx-3070-8-gb-gaming-twin-edge-oc-video-card-zt-a30700h-10p"
+    "https://uk.pcpartpicker.com/product/ThhmP6/zotac-geforce-rtx-3070-8-gb-gaming-twin-edge-oc-video-card-zt-a30700h-10p",
+    "https://uk.pcpartpicker.com/product/XBH8TW/asus-rog-strix-b550-i-gaming-mini-itx-am4-motherboard-rog-strix-b550-i-gaming"
     ]
 
 def get_random_ua():
@@ -75,11 +75,15 @@ noOfParts = str(len(listOfPrices))
 totalPrice = str(round(total, 2))
 print("Total Number of Parts: " + noOfParts)
 print("Total Price: £" + totalPrice)
-if totalPrice == historic["historicPrice"]:
+historicPrice = historic["historicPrice"]
+if totalPrice == historicPrice:
     print("Total Price has remained the same")
-if totalPrice < historic["historicPrice"]:
+if totalPrice < historicPrice:
     print("New Low Price! Current Price is £%s" % totalPrice)
-    historic["historicPrice"] = totalPrice
+    historicPrice = totalPrice
+if totalPrice > historicPrice:
+    difference = totalPrice - historicPrice
+    print("Current Price is £%s more expensive than lowest price." % difference)
 for historicObj in historic["historicList"]:
     for currentObj in listOfPrices:
         # print(historicObj, currentObj)
