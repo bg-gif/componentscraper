@@ -7,6 +7,7 @@ import time
 
 v = open('variables.json')
 historic = json.load(v)
+print(historic)
 uris = [
     "https://uk.pcpartpicker.com/product/vFhmP6/asus-rog-strix-b550-f-gaming-wi-fi-atx-am4-motherboard-rog-strix-b550-f-gaming-wi-fi",
     "https://uk.pcpartpicker.com/product/9nm323/amd-ryzen-53600-36-thz-6-core-processor-100-100000031box",
@@ -74,6 +75,11 @@ noOfParts = str(len(listOfPrices))
 totalPrice = str(round(total, 2))
 print("Total Number of Parts: " + noOfParts)
 print("Total Price: £" + totalPrice)
+if totalPrice == historic["historicPrice"]:
+    print("Total Price has remained the same")
+if totalPrice < historic["historicPrice"]:
+    print("New Low Price! Current Price is £%s" % totalPrice)
+    historic["historicPrice"] = totalPrice
 for historicObj in historic["historicList"]:
     for currentObj in listOfPrices:
         # print(historicObj, currentObj)
@@ -82,8 +88,8 @@ for historicObj in historic["historicList"]:
                 print(historicObj["name"] + ": Same Price")
             if historicObj["price"] > currentObj["price"]:
                 print("New Low Price for " + historicObj["name"] + ".  Current Price: " + currentObj["price"] + ", Historic Price: " + historicObj["price"])
+                historicObj["price"] = currentObj["price"]
 
-# with open("variables.json", "w") as stored:
-#     update = {"historicPrice": totalPrice, "noOfParts": noOfParts, "historicList": listOfPrices}
-#     json.dump(update, stored)
+with open("variables.json", "w") as stored:
+    json.dump(historic, stored)
 
