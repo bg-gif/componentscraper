@@ -32,10 +32,10 @@ def get_random_ua():
         print('Exception in random_ua')
         print(str(ex))
     finally:
-        return random_ua
+        return str(random_ua.strip())
 
 def getprice(uri):
-    random_ua = str(get_random_ua().strip())
+    random_ua = get_random_ua()
     r = requests.get(uri, headers={
     "User-Agent": random_ua, "referer": "google.co.uk"})
     html = r.text
