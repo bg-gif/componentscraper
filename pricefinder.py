@@ -82,17 +82,23 @@ if totalPrice < historicPrice:
     print("New Low Price! Current Price is £%s" % totalPrice)
     historicPrice = totalPrice
 if totalPrice > historicPrice:
-    difference = totalPrice - historicPrice
-    print("Current Price is £%s more expensive than lowest price." % difference)
+    difference = float(totalPrice) - float(historicPrice)
+    print("Current Price is £%s more expensive than lowest price." % round(difference, 2))
 for historicObj in historic["historicList"]:
     for currentObj in listOfPrices:
         # print(historicObj, currentObj)
-        if historicObj == currentObj:
+        existsInHistoric = False
+        if historicObj["name"] == currentObj["name"]:
+            existsInHistoric = True
+            # Is this just checking the same thing??
             if historicObj["price"] == currentObj["price"]:
                 print(historicObj["name"] + ": Same Price")
             if historicObj["price"] > currentObj["price"]:
                 print("New Low Price for " + historicObj["name"] + ".  Current Price: " + currentObj["price"] + ", Historic Price: " + historicObj["price"])
                 historicObj["price"] = currentObj["price"]
+        print(existsInHistoric)
+        # if not existsInHistoric:
+        #     historic["historicList"].append(currentObj)
 
 with open("variables.json", "w") as stored:
     json.dump(historic, stored)
