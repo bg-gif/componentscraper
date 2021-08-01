@@ -126,7 +126,7 @@ if totalPrice != historic["historicPrice"]:
     historic["historicPrice"] = str(totalPrice)
 if float(totalPrice) < float(historic["historicLow"]):
     print("New Historic Low Total Price!")
-    sendNotification.send_notification_via_pushbullet("New Historic Low Price!", f"The current cost of the build is £{totalPrice}")
+    sendNotification.send_notification_via_pushbullet("New Historic Low Price!", f"The current cost of the build is £{totalPrice}\n{output}")
     historic["historicLow"] = totalPrice
 
 
