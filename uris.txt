@@ -1,0 +1,8 @@
+Motherboard - https://uk.pcpartpicker.com/product/XBH8TW/asus-rog-strix-b550-i-gaming-mini-itx-am4-motherboard-rog-strix-b550-i-gaming
+Case - https://uk.pcpartpicker.com/product/29drxr/cooler-master-masterbox-nr200p-mini-itx-desktop-case-mcb-nr200p-kgnn-s00
+RAM - https://uk.pcpartpicker.com/product/p6RFf7/corsair-memory-cmk16gx4m2b3200c16
+Storage - https://uk.pcpartpicker.com/product/Zxw7YJ/samsung-970-evo-plus-1-tb-m2-2280-nvme-solid-state-drive-mz-v7s1t0bam
+Processor - https://uk.pcpartpicker.com/product/9nm323/amd-ryzen-53600-36-thz-6-core-processor-100-100000031box
+Cooler - https://uk.pcpartpicker.com/product/PVfFf7/nzxt-kraken-x53-7311-cfm-liquid-cpu-cooler-rl-krx53-01
+Graphics - https://uk.pcpartpicker.com/product/ThhmP6/zotac-geforce-rtx-3070-8-gb-gaming-twin-edge-oc-video-card-zt-a30700h-10p
+PSU - https://uk.pcpartpicker.com/product/BtsmP6/corsair-sf-600w-80-platinum-certified-fully-modular-sfx-power-supply-cp-9020182-na

@@ -7,17 +7,15 @@ import time
 
 v = open('variables.json')
 historic = json.load(v)
-print(historic)
-uris = [
-    "https://uk.pcpartpicker.com/product/9nm323/amd-ryzen-53600-36-thz-6-core-processor-100-100000031box",
-    "https://uk.pcpartpicker.com/product/29drxr/cooler-master-masterbox-nr200p-mini-itx-desktop-case-mcb-nr200p-kgnn-s00",
-    "https://uk.pcpartpicker.com/product/BtsmP6/corsair-sf-600w-80-platinum-certified-fully-modular-sfx-power-supply-cp-9020182-na",
-    "https://uk.pcpartpicker.com/product/p6RFf7/corsair-memory-cmk16gx4m2b3200c16",
-    "https://uk.pcpartpicker.com/product/PVfFf7/nzxt-kraken-x53-7311-cfm-liquid-cpu-cooler-rl-krx53-01",
-    "https://uk.pcpartpicker.com/product/Zxw7YJ/samsung-970-evo-plus-1-tb-m2-2280-nvme-solid-state-drive-mz-v7s1t0bam",
-    "https://uk.pcpartpicker.com/product/ThhmP6/zotac-geforce-rtx-3070-8-gb-gaming-twin-edge-oc-video-card-zt-a30700h-10p",
-    "https://uk.pcpartpicker.com/product/XBH8TW/asus-rog-strix-b550-i-gaming-mini-itx-am4-motherboard-rog-strix-b550-i-gaming"
-    ]
+# print(historic)
+with open("uris.txt") as f:
+    partSources = f.readlines()
+
+listOfParts = []
+for part in partSources:
+    if part.split("-")[0].strip() != "\n":
+        listOfParts.append(part.split("-")[0].strip())
+print(listOfParts)
 
 def get_random_ua():
     random_ua = ''
@@ -27,7 +25,7 @@ def get_random_ua():
             lines = f.readlines()
             # print(lines)
         if len(lines) > 0:
-            index = np.random.randint(len(lines)-1)
+            index = np.random.randint(len(lines) - 1)
             random_ua = lines[index]
     except Exception as ex:
         print('Exception in random_ua')
@@ -35,15 +33,21 @@ def get_random_ua():
     finally:
         return str(random_ua.strip())
 
-def getprice(uri):
+
+def getprice(part, listarg):
     random_ua = get_random_ua()
-    r = requests.get(uri, headers={
-    "User-Agent": random_ua, "referer": "google.co.uk"})
+    partName = part.split("-")[0].strip()
+    partUri = part.split("-")[1].strip()
+    if partUri != "\n":
+        r = requests.get(partUri, headers={"User-Agent": random_ua, "referer": "google.co.uk"})
     html = r.text
     responseCode = r.status_code
-    print("Request: " + uri + "  Response Code: " + str(responseCode))
+    print("Request: " + partUri + "\nResponse Code: " + str(responseCode))
     soup = BeautifulSoup(html, "html.parser")
     partdetail = {}
+    if not soup.find_all("tbody"):
+        print("No Price returned. Most likely due to bot detection")
+        return
     tds = soup.find_all("tbody")[1].find("tr").find_all("td")
     for td in tds:
         price = td.find("a")
@@ -52,54 +56,75 @@ def getprice(uri):
             regex = "£\\d{1,3}\\.\\d{2}"
             if re.match(regex, cost):
                 partdetail["price"] = cost.split("£")[1]
+                partdetail["historicLow"] = cost.split("£")[1]
                 partdetail["link"] = "https://uk.partpicker.com" + price["href"]
     partdetail["name"] = soup.head.find("meta", property="og:title")["content"]
     print(partdetail)
-    listOfPrices.append(partdetail)
-    delays = [7, 4, 6, 2, 10, 19]
+    listarg[partName] = partdetail
+    delays = range(20)
     delay = np.random.choice(delays)
     time.sleep(delay)
 
-listOfPrices = []
-for uri in uris:
-    getprice(uri)
-# print(listOfPrices)
-output = ""
+# Create list of all component current details
+listOfPrices = {}
+for part in partSources:
+    getprice(part, listOfPrices)
+print(listOfPrices)
+
+# Calculate total price of build and list components and prices
+output = "\n\nPart List:\n\n"
 total = 0
-for component in listOfPrices:
-    output = output + component["name"] + ": " + component["price"] + "/n "
-    cost = component["price"]
-    total = total + float(cost)
-print(output)
+for partType in listOfParts:
+    partName = listOfPrices[partType]["name"]
+    partPrice = listOfPrices[partType]["price"]
+    # print(partName + ": £" + partPrice)
+    historicLow = historic["historicList"][partType]["historicLow"]
+    output = output + partName + ": £" + partPrice
+    if float(partPrice) < float(historicLow):
+        output += ". New Historic Low!\n"
+    else:
+        output += "\n"
+    total = total + float(partPrice)
+
 noOfParts = str(len(listOfPrices))
 totalPrice = str(round(total, 2))
+
+print(output)
 print("Total Number of Parts: " + noOfParts)
 print("Total Price: £" + totalPrice)
-historicPrice = historic["historicPrice"]
-if totalPrice == historicPrice:
-    print("Total Price has remained the same")
-if totalPrice < historicPrice:
-    print("New Low Price! Current Price is £%s" % totalPrice)
-    historicPrice = totalPrice
-if totalPrice > historicPrice:
-    difference = float(totalPrice) - float(historicPrice)
-    print("Current Price is £%s more expensive than lowest price." % round(difference, 2))
-for historicObj in historic["historicList"]:
-    for currentObj in listOfPrices:
-        # print(historicObj, currentObj)
-        existsInHistoric = False
-        if historicObj["name"] == currentObj["name"]:
-            existsInHistoric = True
-            # Is this just checking the same thing??
-            if historicObj["price"] == currentObj["price"]:
-                print(historicObj["name"] + ": Same Price")
-            if historicObj["price"] > currentObj["price"]:
-                print("New Low Price for " + historicObj["name"] + ".  Current Price: " + currentObj["price"] + ", Historic Price: " + historicObj["price"])
-                historicObj["price"] = currentObj["price"]
-        print(existsInHistoric)
-        # if not existsInHistoric:
-        #     historic["historicList"].append(currentObj)
+
+
+changedParts = False
+for partType in listOfParts:
+    historicList = historic["historicList"]
+    if historicList[partType]["name"] != listOfPrices[partType]["name"]:
+        changedParts = True
+        print(f"\n{partType} has changed.\n")
+        print(f"{historicList[partType]['name']} was changed to {listOfPrices[partType]['name']}\n")
+        diff = round(float(historicList[partType]["price"]) - float(listOfPrices[partType]["price"]),2)
+        if diff > 0:
+            print(f"{listOfPrices[partType]['name']} is £{str(diff)} cheaper than {historicList[partType]['name']}\n")
+        if diff < 0:
+            print(f"{listOfPrices[partType]['name']} is £{str(abs(diff))} more expensive than {historicList[partType]['name']}\n")
+        historicList.pop(partType)
+        historicList[partType] = listOfPrices[partType]
+
+if totalPrice != historic["historicPrice"]:
+    print("New Total Price updated to include Changes\n")
+    if changedParts:
+        print("Price change due to changed parts")
+    print(f"New Total Price is £{totalPrice}\n")
+    totalDiff = round(float(totalPrice) - float(historic["historicPrice"]),2)
+    # print(totalDiff)
+    if totalDiff < 0:
+        print(f"The new total is £{str(abs(totalDiff))} cheaper than {historic['historicPrice']}\n")
+    if totalDiff > 0:
+        print(f"The new total is £{str(totalDiff)} more expensive than previous.\n")
+    historic["historicPrice"] = str(totalPrice)
+if float(totalPrice) < float(historic["historicLow"]):
+    print("New Historic Low Total Price!")
+    historic["historicLow"] = totalPrice
+
 
 with open("variables.json", "w") as stored:
     json.dump(historic, stored)
-
