@@ -4,9 +4,12 @@ import re
 import json
 import numpy as np
 import time
+import os.path
 
-v = open('variables.json')
-historic = json.load(v)
+variablesExists = os.path.exists('variables.json')
+if variablesExists:
+    v = open('variables.json')
+    historic = json.load(v)
 # print(historic)
 with open("uris.txt") as f:
     partSources = f.readlines()
@@ -69,9 +72,14 @@ def getprice(part, listarg):
 listOfPrices = {}
 for part in partSources:
     getprice(part, listOfPrices)
+
 print(listOfPrices)
 
 # Calculate total price of build and list components and prices
+noOfParts = str(len(listOfPrices))
+totalPrice = "999999"
+if not variablesExists:
+    historic = {"historicList": listOfPrices, "historicLow": totalPrice, "historicPrice": totalPrice, "historicNoOfParts": noOfParts}
 output = "\n\nPart List:\n\n"
 total = 0
 for partType in listOfParts:
@@ -86,7 +94,6 @@ for partType in listOfParts:
         output += "\n"
     total = total + float(partPrice)
 
-noOfParts = str(len(listOfPrices))
 totalPrice = str(round(total, 2))
 
 print(output)
