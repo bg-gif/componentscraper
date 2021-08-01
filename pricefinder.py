@@ -4,6 +4,7 @@ import re
 import json
 import numpy as np
 import time
+import sendNotification
 
 v = open('variables.json')
 historic = json.load(v)
@@ -82,6 +83,8 @@ for partType in listOfParts:
     output = output + partName + ": £" + partPrice
     if float(partPrice) < float(historicLow):
         output += ". New Historic Low!\n"
+        sendNotification.send_notification_via_pushbullet(f"New {partType} Historic Low Price!", f"---{partType}---\n{listOfPrices[partType]['name']} has reached a historic low price of £{listOfPrices[partType]['price']}")
+        historic["historicList"][partType]["historicLow"] = partPrice
     else:
         output += "\n"
     total = total + float(partPrice)
@@ -123,6 +126,7 @@ if totalPrice != historic["historicPrice"]:
     historic["historicPrice"] = str(totalPrice)
 if float(totalPrice) < float(historic["historicLow"]):
     print("New Historic Low Total Price!")
+    sendNotification.send_notification_via_pushbullet("New Historic Low Price!", f"The current cost of the build is £{totalPrice}")
     historic["historicLow"] = totalPrice
 
 
