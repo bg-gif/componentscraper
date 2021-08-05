@@ -159,3 +159,4 @@ partList = s.getpartlist(s.partSources)
 listOfPrices = s.getListOfPrices(s.partSources)
 priceCheck = s.priceCheck(partList, s.historic)
 s.writetorecord(s.historic)
+
