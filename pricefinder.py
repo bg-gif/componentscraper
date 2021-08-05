@@ -5,19 +5,25 @@ import json
 import numpy as np
 import time
 import sendNotification
+import os.path
+
 
 class Scraper:
 
-    def __init__(self):
-        self.partSources = self.getURIs()["partsources"]
-        self.historic = self.getURIs()["historic"]
+    def __init__(self, uris, variables):
+        self.partSources = self.getURIs(uris, variables)["partsources"]
+        self.historic = self.getURIs(uris, variables)["historic"]
 
 
-    def getURIs(self):
-        v = open('variables.json')
-        historic = json.load(v)
+    def getURIs(self, uris, variables):
+        variablesExists = os.path.exists('variables.json')
+        if variablesExists:
+            v = open(variables)
+            historic = json.load(v)
+        else:
+            historic = {}
         # print(historic)
-        with open("uris.txt") as f:
+        with open(uris) as f:
             partSources = f.readlines()
         return {"partsources": partSources, "historic": historic }
 
@@ -47,7 +53,7 @@ class Scraper:
             return str(random_ua.strip())
 
 
-    def getprice(self, part, listarg):
+    def getprice(self, part, listarg, historic):
         random_ua = self.get_random_ua()
         partName = part.split("-")[0].strip()
         partUri = part.split("-")[1].strip()
@@ -68,9 +74,15 @@ class Scraper:
                 cost = str(price.string)
                 regex = "£\\d{1,3}\\.\\d{2}"
                 if re.match(regex, cost):
-                    partdetail["price"] = cost.split("£")[1]
-                    partdetail["historicLow"] = cost.split("£")[1]
+                    price_float = cost.split("£")[1]
+                    partdetail["price"] = price_float
                     partdetail["link"] = "https://uk.partpicker.com" + price["href"]
+                    if historic["historicList"][partName]:
+                        historicPart = historic["historicList"][partName]
+                        if float(historicPart["historicLow"]) < float(price_float):
+                            partdetail["historicLow"] = historicPart["historicLow"]
+                        else:
+                            partdetail["historicLow"] = price_float
         partdetail["name"] = soup.head.find("meta", property="og:title")["content"]
         print(partdetail)
         listarg[partName] = partdetail
@@ -78,11 +90,13 @@ class Scraper:
         delay = np.random.choice(delays)
         time.sleep(delay)
 
-    def getListOfPrices(self, partSources):
+    def getListOfPrices(self, partSources, historic):
         # Create list of all component current details
         listOfPrices = {}
         for part in partSources:
-            self.getprice(part, listOfPrices)
+            self.getprice(part, listOfPrices, historic)
+        if historic == {}:
+            historic = listOfPrices
         print(listOfPrices)
         return listOfPrices
 
@@ -154,9 +168,9 @@ class Scraper:
         with open("variables.json", "w") as stored:
             json.dump(historic, stored)
 
-s = Scraper()
+s = Scraper("uris.txt", "variables.json")
 partList = s.getpartlist(s.partSources)
-listOfPrices = s.getListOfPrices(s.partSources)
+listOfPrices = s.getListOfPrices(s.partSources, s.historic)
 priceCheck = s.priceCheck(partList, s.historic)
 s.writetorecord(s.historic)
 
