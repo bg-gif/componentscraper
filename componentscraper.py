@@ -1,3 +1,5 @@
+import logging
+
 from bs4 import BeautifulSoup
 import requests
 import re
@@ -16,7 +18,7 @@ class Scraper:
 
 
     def getURIs(self, uris, variables):
-        variablesExists = os.path.exists('variables.json')
+        variablesExists = os.path.exists(variables)
         if variablesExists:
             v = open(variables)
             historic = json.load(v)
@@ -118,7 +120,7 @@ class Scraper:
             if float(partPrice) < float(historicLow):
                 diff = str(round(float(historicLow) - float(partPrice),2))
                 print(f"{partType} is £{diff} cheaper than the historic low. New Low Price added to historic record")
-                output += ". New Historic Low!"
+                output += ". New Historic Low!\n"
                 sendNotification.send_notification_via_pushbullet(f"New {partType} Historic Low Price!", f"---{partType}---\n{listOfPrices[partType]['name']} has reached a historic low price of £{listOfPrices[partType]['price']}")
                 historic["historicList"][partType]["historicLow"] = partPrice
             else:
@@ -131,6 +133,7 @@ class Scraper:
         print(output)
         print("Total Number of Parts: " + noOfParts)
         print("Total Price: £" + totalPrice)
+        logging.debug(output + "\nTotal Number of Parts: " + noOfParts + "\nTotal Price: £" + totalPrice)
 
         for partType in listOfParts:
             changed = False
