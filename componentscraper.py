@@ -92,18 +92,21 @@ class Scraper:
         delays = range(20)
         delay = np.random.choice(delays)
         time.sleep(delay)
-        return
+        return responseCode
 
     def getListOfPrices(self, partSources, historic):
         # Create list of all component current details
         listOfPrices = {}
+        allGood = True
         for part in partSources:
-            self.getprice(part, listOfPrices, historic)
+            rc = self.getprice(part, listOfPrices, historic)
+            if rc != 200:
+                allGood = False
         if historic == {}:
             self.historic = listOfPrices
         # print(listOfPrices)
         print("\n")
-        return listOfPrices
+        return {"listOfPrices":listOfPrices, "allGood":allGood}
 
     def priceCheck(self, listOfParts, historic, listOfPrices):
         # Calculate total price of build and list components and prices
