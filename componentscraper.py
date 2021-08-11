@@ -27,6 +27,7 @@ class Scraper:
         # print(historic)
         with open(uris) as f:
             partSources = f.readlines()
+        print({"partsources": partSources, "historic": historic })
         return {"partsources": partSources, "historic": historic }
 
 
@@ -99,7 +100,7 @@ class Scraper:
         for part in partSources:
             self.getprice(part, listOfPrices, historic)
         if historic == {}:
-            self['historic'] = listOfPrices
+            self.historic = listOfPrices
         # print(listOfPrices)
         print("\n")
         return listOfPrices
@@ -108,6 +109,7 @@ class Scraper:
         # Calculate total price of build and list components and prices
         output = "\n\nPart List:\n\n"
         total = 0
+        print(listOfParts,historic, listOfPrices)
         for partType in listOfParts:
             partName = listOfPrices[partType]["name"]
             partPrice = listOfPrices[partType]["price"]

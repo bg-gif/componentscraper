@@ -7,5 +7,5 @@ def run():
     priceCheck = v.priceCheck(partList, v.historic, listOfPrices)
     v.historic = priceCheck["historic"]
     v.writetorecord(v.historic)
-    return {"listOfPrices":listOfPrices, "historic": v.historic, "partList": partList}
+    return {"listOfPrices": listOfPrices, "historic": v.historic, "partList": partList}
 
