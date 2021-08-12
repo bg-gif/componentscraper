@@ -8,7 +8,8 @@ import numpy as np
 import time
 import sendNotification
 import os.path
-from urllib.request import Request, urlopen
+from urllib.request import Request, urlopen, FancyURLopener
+from urllib.error import URLError
 
 
 class Scraper:
@@ -16,6 +17,11 @@ class Scraper:
     def __init__(self, uris, variables):
         self.partSources = self.getURIs(uris, variables)["partsources"]
         self.historic = self.getURIs(uris, variables)["historic"]
+        self.proxyList = self.getProxyList()
+
+    def getProxyList(self):
+        proxyList = open('http_proxies.txt').readlines()
+        return proxyList
 
 
     def getURIs(self, uris, variables):
@@ -56,23 +62,37 @@ class Scraper:
         finally:
             return str(random_ua.strip())
 
+    def resetProxy(self):
+        index = np.random.randint(len(self.proxyList) - 1)
+        proxy_host = self.proxyList[index].strip()
+        return proxy_host
+
 
     def getprice(self, part, listarg, historic):
         random_ua = self.get_random_ua()
         partName = part.split("-")[0].strip()
         partUri = part.split("-")[1].strip()
+        proxy_host = self.resetProxy()
         if partUri != "\n":
-            r = Request(partUri, headers={'User-Agent': random_ua})
-            call = urlopen(r)
-            web_byte = call.read()
-            responseCode = call.getcode()
+            try:
+                # r = Request(partUri, headers={'User-Agent': random_ua})
+                # r.set_proxy(proxy_host, 'https')
+                # call = urlopen(r)
+                p = {'http': "http://" + proxy_host}
+                opener = AppURLopener()
+                call = opener.open(partUri)
+                web_byte = call.read()
+                responseCode = call.getcode()
+            except URLError as e:
+                print(e)
+                self.getprice(part, listarg, historic)
             html = web_byte.decode('utf-8')
         print("Request: " + partUri + "\nResponse Code: " + str(responseCode), end="\n")
         soup = BeautifulSoup(html, "html.parser")
         partdetail = {}
         if not soup.find_all("tbody"):
             print("No Price returned. Most likely due to bot detection", end="\n")
-            return r.status_code
+            return responseCode
         tds = soup.find_all("tbody")[1].find("tr").find_all("td")
         for td in tds:
             price = td.find("a")
@@ -181,3 +201,7 @@ class Scraper:
         with open("variables.json", "w") as stored:
             json.dump(historic, stored)
         return
+
+class AppURLopener(FancyURLopener):
+    version = "Mozilla/5.0"
+
