@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, make_response
 from flask_restful import Resource, Api, reqparse
 import os
 import pricefinder as scraper
@@ -14,7 +14,9 @@ class Run(Resource):
 
 class Hello(Resource):
     def get(self):
-        return render_template(hello.html)
+        # return render_template('hello.html'), 200
+        headers = {'Content-Type': 'text/html'}
+        return make_response(render_template('hello.html'), 200, headers)
 
 
 api.add_resource(Run, '/run')

@@ -89,7 +89,7 @@ class Scraper:
         partdetail["name"] = soup.head.find("meta", property="og:title")["content"]
         # print(partdetail)
         listarg[partName] = partdetail
-        delays = range(20)
+        delays = range(5)
         delay = np.random.choice(delays)
         time.sleep(delay)
         return responseCode
