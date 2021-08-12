@@ -98,15 +98,17 @@ class Scraper:
         # Create list of all component current details
         listOfPrices = {}
         allGood = True
+        responseList = []
         for part in partSources:
             rc = self.getprice(part, listOfPrices, historic)
+            responseList.append({part:rc})
             if rc != 200:
                 allGood = False
         if historic == {}:
             self.historic = listOfPrices
         # print(listOfPrices)
         print("\n")
-        return {"listOfPrices":listOfPrices, "allGood":allGood}
+        return {"listOfPrices":listOfPrices, "allGood":allGood, 'responseList': responseList}
 
     def priceCheck(self, listOfParts, historic, listOfPrices):
         # Calculate total price of build and list components and prices

@@ -7,7 +7,7 @@ def run():
     listOfPrices = getList['listOfPrices']
     if not getList['allGood']:
         print("Scraping Failed")
-        return {'message': 'Something fucked up'}
+        return {'message': 'Something fucked up', 'responses': getList['responseList']}
     priceCheck = v.priceCheck(partList, v.historic, listOfPrices)
     v.historic = priceCheck["historic"]
     v.writetorecord(v.historic)
