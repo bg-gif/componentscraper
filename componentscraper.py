@@ -8,6 +8,7 @@ import numpy as np
 import time
 import sendNotification
 import os.path
+from urllib.request import Request, urlopen
 
 
 class Scraper:
@@ -61,9 +62,11 @@ class Scraper:
         partName = part.split("-")[0].strip()
         partUri = part.split("-")[1].strip()
         if partUri != "\n":
-            r = requests.get(partUri, headers={"User-Agent": random_ua, "referer": "google.co.uk"})
-        html = r.text
-        responseCode = r.status_code
+            r = Request(partUri, headers={'User-Agent': random_ua})
+            call = urlopen(r)
+            web_byte = call.read()
+            responseCode = call.getcode()
+            html = web_byte.decode('utf-8')
         print("Request: " + partUri + "\nResponse Code: " + str(responseCode), end="\n")
         soup = BeautifulSoup(html, "html.parser")
         partdetail = {}
@@ -92,7 +95,7 @@ class Scraper:
         delays = range(5)
         delay = np.random.choice(delays)
         time.sleep(delay)
-        return r.status_code
+        return responseCode
 
     def getListOfPrices(self, partSources, historic):
         # Create list of all component current details
