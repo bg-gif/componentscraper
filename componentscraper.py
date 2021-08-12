@@ -81,8 +81,9 @@ class Scraper:
                 p = {'http': "http://" + proxy_host}
                 opener = AppURLopener(p)
                 call = opener.open(partUri)
-                web_byte = call.read()
                 responseCode = call.getcode()
+                print(responseCode)
+                web_byte = call.read()
             except URLError as e:
                 print(e)
                 self.getprice(part, listarg, historic)
