@@ -92,7 +92,7 @@ class Scraper:
         delays = range(5)
         delay = np.random.choice(delays)
         time.sleep(delay)
-        return responseCode
+        return r.status_code
 
     def getListOfPrices(self, partSources, historic):
         # Create list of all component current details
