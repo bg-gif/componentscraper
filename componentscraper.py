@@ -69,7 +69,7 @@ class Scraper:
         partdetail = {}
         if not soup.find_all("tbody"):
             print("No Price returned. Most likely due to bot detection", end="\n")
-            return
+            return r.status_code
         tds = soup.find_all("tbody")[1].find("tr").find_all("td")
         for td in tds:
             price = td.find("a")
