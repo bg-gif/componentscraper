@@ -79,7 +79,7 @@ class Scraper:
                 # r.set_proxy(proxy_host, 'https')
                 # call = urlopen(r)
                 p = {'http': "http://" + proxy_host}
-                opener = AppURLopener()
+                opener = AppURLopener(p)
                 call = opener.open(partUri)
                 web_byte = call.read()
                 responseCode = call.getcode()
