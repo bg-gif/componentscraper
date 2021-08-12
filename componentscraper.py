@@ -1,5 +1,4 @@
 import logging
-
 from bs4 import BeautifulSoup
 import requests
 import re
@@ -73,12 +72,15 @@ class Scraper:
         partName = part.split("-")[0].strip()
         partUri = part.split("-")[1].strip()
         proxy_host = self.resetProxy()
+        v = open('private.json')
+        secrets = json.load(v)
         if partUri != "\n":
             try:
                 # r = Request(partUri, headers={'User-Agent': random_ua})
                 # r.set_proxy(proxy_host, 'https')
                 # call = urlopen(r)
-                p = {'http': "http://" + proxy_host}
+                PROXY_KEY = secrets["PROXY_KEY"]
+                p = {'http': "http://" + PROXY_KEY + proxy_host}
                 opener = AppURLopener(p)
                 call = opener.open(partUri)
                 responseCode = call.getcode()
