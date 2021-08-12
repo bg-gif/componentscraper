@@ -9,12 +9,11 @@ api = Api(app)
 class Run(Resource):
     def get(self):
         results = scraper.run()
-        return results, 200
+        return {'message':'it ran', 'results': results}, 200
 
 
 class Hello(Resource):
     def get(self):
-        # return render_template('hello.html'), 200
         headers = {'Content-Type': 'text/html'}
         return make_response(render_template('hello.html'), 200, headers)
 
