@@ -1,15 +1,15 @@
-import componentscraper
+import componentscraper as cs
+
 
 def run():
-    v = componentscraper.Scraper("uris.txt", "variables.json")
-    partList = v.getpartlist(v.partSources)
-    getList = v.getListOfPrices(v.partSources, v.historic)
-    listOfPrices = getList['listOfPrices']
-    if not getList['allGood']:
+    v = cs.Scraper("uris.txt")
+    part_list = cs.get_part_list(v.part_sources)
+    get_list = v.get_list_of_prices(v.part_sources, v.historic)
+    list_of_prices = get_list
+    if not get_list['all_good']:
         print("Scraping Failed")
-        return {'message': 'Something fucked up', 'responses': getList['responseList']}
-    priceCheck = v.priceCheck(partList, v.historic, listOfPrices)
-    v.historic = priceCheck["historic"]
-    v.writetorecord(v.historic)
-    return {"listOfPrices": listOfPrices, "historic": v.historic, "partList": partList}
-
+        return {'message': 'Something fucked up', 'responses': get_list['responseList']}
+    price_check = cs.price_check(part_list, v.historic, list_of_prices)
+    v.historic = price_check["historic"]
+    cs.write_to_record(v.historic)
+    return {"list_of_prices": listOfPrices, "historic": v.historic, "part_list": partList}

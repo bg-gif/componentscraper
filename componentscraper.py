@@ -6,7 +6,7 @@ import re
 import json
 import numpy as np
 import time
-import sendNotification
+import send_notification
 import os.path
 import os
 from decouple import config
@@ -86,8 +86,8 @@ def get_part_list(part_sources):
     return list_of_parts
 
 
-def get_variables(uris, variables):
-    historic = os.getenv(HISTORIC)
+def get_variables(uris):
+    historic = os.getenv('HISTORIC')
     if not historic:
         historic = {}
     with open(uris) as f:
@@ -97,7 +97,7 @@ def get_variables(uris, variables):
 
 def write_to_record(historic):
     os.environ['HISTORIC'] = historic
-    return
+    return 'Historic Updated'
 
 
 def get_random_ua():
@@ -117,55 +117,56 @@ def get_random_ua():
         return str(random_ua.strip())
 
 
+def get_price(part, listarg, historic):
+    random_ua = get_random_ua()
+    part_name = part.split("-")[0].strip()
+    part_uri = part.split("-")[1].strip()
+    if part_uri != "\n":
+        r = requests.get(part_uri, headers={"User-Agent": random_ua, "referer": "google.co.uk"})
+    html = r.text
+    response_code = r.status_code
+    print("Request: " + part_uri + "\nResponse Code: " + str(response_code), end="\n")
+    soup = BeautifulSoup(html, "html.parser")
+    part_detail = {}
+    if not soup.find_all("tbody"):
+        print("No Price returned. Most likely due to bot detection", end="\n")
+        return
+    tds = soup.find_all("tbody")[1].find("tr").find_all("td")
+    for td in tds:
+        price = td.find("a")
+        if price is not None:
+            cost = str(price.string)
+            regex = "£\\d{1,3}\\.\\d{2}"
+            if re.match(regex, cost):
+                price_float = cost.split("£")[1]
+                part_detail["price"] = price_float
+                part_detail["link"] = "https://uk.partpicker.com" + price["href"]
+                if historic["historic_list"][part_name]:
+                    historic_part = historic["historic_list"][part_name]
+                    if float(historic_part["historic_low"]) < float(price_float):
+                        part_detail["historic_low"] = historic_part["historic_low"]
+                    else:
+                        part_detail["historic_low"] = price_float
+    part_detail["name"] = soup.head.find("meta", property="og:title")["content"]
+    # print(part_detail)
+    listarg[partName] = part_detail
+    delays = range(20)
+    delay = np.random.choice(delays)
+    time.sleep(delay)
+    return "All Prices Collected"
+
+
 class Scraper:
 
-    def __init__(self, uris, variables):
-        self.part_sources = self.getURIs(uris, variables)["part_sources"]
-        self.historic = self.getURIs(uris, variables)["historic"]
+    def __init__(self, uris):
+        self.part_sources = get_variables(uris)["part_sources"]
+        self.historic = get_variables(uris)["historic"]
 
-    def get_price(self, part, listarg, historic):
-        random_ua = self.get_random_ua()
-        part_name = part.split("-")[0].strip()
-        part_uri = part.split("-")[1].strip()
-        if part_uri != "\n":
-            r = requests.get(part_uri, headers={"User-Agent": random_ua, "referer": "google.co.uk"})
-        html = r.text
-        response_code = r.status_code
-        print("Request: " + partUri + "\nResponse Code: " + str(response_code), end="\n")
-        soup = BeautifulSoup(html, "html.parser")
-        part_detail = {}
-        if not soup.find_all("tbody"):
-            print("No Price returned. Most likely due to bot detection", end="\n")
-            return
-        tds = soup.find_all("tbody")[1].find("tr").find_all("td")
-        for td in tds:
-            price = td.find("a")
-            if price is not None:
-                cost = str(price.string)
-                regex = "£\\d{1,3}\\.\\d{2}"
-                if re.match(regex, cost):
-                    price_float = cost.split("£")[1]
-                    part_detail["price"] = price_float
-                    part_detail["link"] = "https://uk.partpicker.com" + price["href"]
-                    if historic["historic_list"][part_name]:
-                        historic_part = historic["historic_list"][part_name]
-                        if float(historic_part["historic_low"]) < float(price_float):
-                            part_detail["historic_low"] = historic_part["historic_low"]
-                        else:
-                            part_detail["historic_low"] = price_float
-        part_detail["name"] = soup.head.find("meta", property="og:title")["content"]
-        # print(part_detail)
-        listarg[partName] = part_detail
-        delays = range(20)
-        delay = np.random.choice(delays)
-        time.sleep(delay)
-        return
-
-    def get_list_of_prices(self, part_sources  , historic):
+    def get_list_of_prices(self, part_sources, historic):
         # Create list of all component current details
         list_of_prices = {}
         for part in part_sources:
-            self.get_price(part, list_of_prices, historic)
+            get_price(part, list_of_prices, historic)
         if historic == {}:
             self['historic'] = list_of_prices
         # print(listOfPrices)
