@@ -7,6 +7,7 @@ __pycache__/
 *.so
 variables.json
 private.json
+http_proxies.txt
 # Distribution / packaging
 .Python
 build/
