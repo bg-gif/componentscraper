@@ -8,7 +8,6 @@ import time
 import send_notification
 import os.path
 import os
-from decouple import config
 from urllib.request import Request, urlopen, FancyURLopener
 from urllib.error import URLError
 import urllib3
