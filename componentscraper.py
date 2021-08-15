@@ -12,6 +12,7 @@ from urllib.request import Request, urlopen, FancyURLopener
 from urllib.error import URLError
 import urllib3
 from requests.auth import HTTPProxyAuth
+import cloudscraper
 
 
 def write_to_record(historic):
@@ -149,7 +150,9 @@ class Scraper:
         proxy_dict = {
             "http": http_proxy
         }
-        r = requests.get(uri, headers=headers, proxies=proxy_dict)
+        scraper = cloudscraper.create_scraper()
+        r = scraper.get(uri, headers=headers, proxies=proxy_dict)
+        # r = requests.get(uri, headers=headers, proxies=proxy_dict)
         return r
 
     def get_price(self, part, part_list, historic):
