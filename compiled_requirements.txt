@@ -5,3 +5,4 @@ numpy
 flask_restful
 gunicorn
 urllib3
+cloudscraper
