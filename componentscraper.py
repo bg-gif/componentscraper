@@ -151,6 +151,8 @@ class Scraper:
             "http": http_proxy
         }
         scraper = cloudscraper.create_scraper()
+        print(proxy_host)
+        print(scraper.get('http://www.showmemyip.com/', headers=headers, proxies=proxy_dict).text)
         r = scraper.get(uri, headers=headers, proxies=proxy_dict)
         # r = requests.get(uri, headers=headers, proxies=proxy_dict)
         return r
@@ -166,7 +168,7 @@ class Scraper:
             except URLError as e:
                 print(e)
                 self.get_price(part, part_list, historic)
-            html = r.content.decode('utf-8')
+            html = r.text
         print("Request: " + part_uri + "\nResponse Code: " + str(response_code), end="\n")
         soup = BeautifulSoup(html, "html.parser")
         part_detail = {}
