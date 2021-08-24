@@ -13,10 +13,13 @@ from urllib.error import URLError
 import urllib3
 from requests.auth import HTTPProxyAuth
 import cloudscraper
+from selenium import webdriver
 
 
 def write_to_record(historic):
     os.environ['HISTORIC'] = str(historic)
+    print("history\n" + os.environ['HISTORIC'])
+    print('fuuuuuuck')
     return 'Historic Updated'
 
 
@@ -119,6 +122,7 @@ def get_part_list(part_sources):
 
 def get_variables(uris):
     historic = json.loads(os.getenv('HISTORIC'))
+    print(type(historic))
     with open(uris) as f:
         part_sources = f.readlines()
     return {"part_sources": part_sources, "historic": historic}
@@ -145,16 +149,23 @@ class Scraper:
     def make_request(self, uri):
         proxy_host = self.reset_proxy()
         proxy_key = os.getenv('PROXY_KEY')
-        http_proxy = "http://" + proxy_key + proxy_host
-        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"}
+        http_proxy = "http://" + "127.0.0.1:24000"
+        https_proxy = "http://" + proxy_key + proxy_host
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", "Cookie": "xcsrftoken=JmV23GDbuy3k5sFBMYFUlAPheEIJ2gjJTajRBKG9LmMhHTEO0LmJsw5VWH1XhhO3; xsessionid=c9rdy88zkouwbq9pp6n3dglyfa7142jm; xgdpr-consent=deny; cf_clearance=0d2ecd2bffdefba61e10c54a134b854419a58cbd-1628982253-0-250"}
         proxy_dict = {
-            "http": http_proxy
+            "http": http_proxy,
+            "https": http_proxy
         }
-        scraper = cloudscraper.create_scraper()
-        print(proxy_host)
-        print(scraper.get('http://www.showmemyip.com/', headers=headers, proxies=proxy_dict).text)
-        r = scraper.get(uri, headers=headers, proxies=proxy_dict)
-        # r = requests.get(uri, headers=headers, proxies=proxy_dict)
+        # scraper = cloudscraper.create_scraper()
+        # print(proxy_host)
+        # print(scraper.get('https://www.showmemyip.com/', headers=headers, proxies=proxy_dict).text)
+        # try:
+        #     r = scraper.get(uri, proxies=proxy_dict)
+        # except cloudscraper.exceptions.CloudflareChallengeError as e:
+        #     print(e)
+        #     return "Failed"
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        r = requests.get(uri, proxies=proxy_dict, verify=False)
         return r
 
     def get_price(self, part, part_list, historic):
@@ -163,45 +174,56 @@ class Scraper:
         if part_uri != "\n":
             try:
                 r = self.make_request(part_uri)
-                response_code = r.status_code
-                print(response_code)
+                if r.status_code != 200:
+                    print("Request: " + part_uri + "\nResponse Code: " + str(r.status_code) + "\nRetrying....", end="\n")
+                    self.get_price(part, part_list, historic)
+                if r.status_code == 200:
+                    response_code = r.status_code
+                    print("Request: " + part_uri + "\nResponse Code: " + str(r.status_code), end="\n")
+                    html = r.text
+                    soup = BeautifulSoup(html, "html.parser")
+                    part_detail = {}
+                    if not soup.find_all("tbody"):
+                        # print("No Price returned. Most likely due to bot detection", end="\n")
+                        # return 400
+                        print("Request: " + part_uri + "\nResponse Code: " + str(r.status_code) + "\nRetrying....",
+                              end="\n")
+                        self.get_price(part, part_list, historic)
+                    tds = soup.find_all("tbody")[1].find("tr").find_all("td")
+                    for td in tds:
+                        price = td.find("a")
+                        if price is not None:
+                            cost = str(price.string)
+                            regex = "£\\d{1,3}\\.\\d{2}"
+                            if re.match(regex, cost):
+                                price_float = cost.split("£")[1]
+                                part_detail["price"] = price_float
+                                part_detail["link"] = "https://uk.partpicker.com" + price["href"]
+                                if historic != {}:
+                                    if historic.historic_list[part_name]:
+                                        historicPart = historic["historic_list"][part_name]
+                                        if float(historicPart["historic_low"]) < float(price_float):
+                                            part_detail["historic_low"] = historicPart["historic_low"]
+                                        else:
+                                            part_detail["historic_low"] = price_float
+                    part_detail["name"] = soup.head.find("meta", property="og:title")["content"]
+                    part_list[part_name] = part_detail
+                    delays = range(5)
+                    delay = np.random.choice(delays)
+                    time.sleep(delay)
+                    return response_code
+                if r.status_code == 503:
+                    return 503
+                else:
+                    return 666
             except URLError as e:
                 print(e)
                 self.get_price(part, part_list, historic)
-            html = r.text
-        print("Request: " + part_uri + "\nResponse Code: " + str(response_code), end="\n")
-        soup = BeautifulSoup(html, "html.parser")
-        part_detail = {}
-        if not soup.find_all("tbody"):
-            print("No Price returned. Most likely due to bot detection", end="\n")
-            return 400
-        tds = soup.find_all("tbody")[1].find("tr").find_all("td")
-        for td in tds:
-            price = td.find("a")
-            if price is not None:
-                cost = str(price.string)
-                regex = "£\\d{1,3}\\.\\d{2}"
-                if re.match(regex, cost):
-                    price_float = cost.split("£")[1]
-                    part_detail["price"] = price_float
-                    part_detail["link"] = "https://uk.partpicker.com" + price["href"]
-                    if historic != {}:
-                        if historic.historic_list[part_name]:
-                            historicPart = historic["historic_list"][part_name]
-                            if float(historicPart["historic_low"]) < float(price_float):
-                                part_detail["historic_low"] = historicPart["historic_low"]
-                            else:
-                                part_detail["historic_low"] = price_float
-        part_detail["name"] = soup.head.find("meta", property="og:title")["content"]
-        # print(part_detail)
-        part_list[part_name] = part_detail
-        delays = range(5)
-        delay = np.random.choice(delays)
-        time.sleep(delay)
-        return response_code
+
 
     def get_list_of_prices(self, part_sources, historic):
         # Create list of all component current details
+        print("HISTORIC: " + str(historic))
         list_of_prices = {}
         all_good = True
         response_list = []
@@ -212,7 +234,6 @@ class Scraper:
                 all_good = False
         if historic == {}:
             self.historic = list_of_prices
-        # print(list_of_prices)
         print("\n")
         return {"list_of_prices": list_of_prices, "all_good": all_good, 'response_list': response_list}
 
