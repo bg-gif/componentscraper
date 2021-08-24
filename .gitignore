@@ -7,6 +7,9 @@ __pycache__/
 *.so
 variables.json
 private.json
+testing.py
+test_uris.txt
+cloudflareuris.txt
 http_proxies.txt
 # Distribution / packaging
 .Python
